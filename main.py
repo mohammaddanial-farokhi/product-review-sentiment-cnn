@@ -1,12 +1,40 @@
 import os
+import re
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.utils import plot_model
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import (
+    Input,
+    Dense,
+    Flatten,
+    Embedding,
+    Conv1D,
+    MaxPool1D,
+    Dropout,
+)
+from tensorflow.keras.layers import concatenate
 
 
 # ==================================
 # 1. PreProcess
 # ==================================
-def create_dataset():
+def clean_text(text):
+    URL_PATTERN = re.compile(r"http\S+|www\.\S+")
+    HTML_PATTERN = re.compile(r"<.*?>")
+    MULTI_SPACE_PATTERN = re.compile(r"\s+")
+
+    text = text.lower()
+    text = HTML_PATTERN.sub(" ", text)
+    text = URL_PATTERN.sub(" ", text)
+    text = MULTI_SPACE_PATTERN.sub(" ", text).strip()
+
+    return text
+
+
+def build_dataset():
     pos_dir = "data/pos"
     neg_dir = "data/neg"
     rows = []
@@ -19,7 +47,7 @@ def create_dataset():
         filepath = os.path.join(pos_dir, filename)
 
         with open(filepath, "r", encoding="utf-8") as f:
-            text = f.read().strip()
+            text = clean_text(f.read().strip())
 
         if text == "":
             continue
@@ -42,7 +70,7 @@ def create_dataset():
         filepath = os.path.join(neg_dir, filename)
 
         with open(filepath, "r", encoding="utf-8") as f:
-            text = f.read().strip()
+            text = clean_text(f.read().strip())
 
         if text == "":
             continue
@@ -65,6 +93,7 @@ def create_dataset():
     # print(main_dataset.head())
     # print(main_dataset["label"].value_counts())
     # print(main_dataset.shape)
+
     return main_dataset
 
 
@@ -87,7 +116,16 @@ def train_test_valid_dataset(dataset):
 
 
 if __name__ == "__main__":
-    main_dataset = create_dataset()
-    tarin_datset, test_dataset, validation_dataset = train_test_valid_dataset(
+    main_dataset = build_dataset()
+    train_dataset, test_dataset, validation_dataset = train_test_valid_dataset(
         main_dataset
     )
+
+    X_train = train_dataset["text"]
+    y_train = train_dataset["label"]
+
+    X_val = validation_dataset["text"]
+    y_val = validation_dataset["label"]
+
+    X_test = test_dataset["text"]
+    y_test = test_dataset["label"]
