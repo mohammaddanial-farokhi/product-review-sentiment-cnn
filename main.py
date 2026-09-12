@@ -1,7 +1,11 @@
 import os
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 
+# ==================================
+# 1. PreProcess
+# ==================================
 def create_dataset():
     pos_dir = "data/pos"
     neg_dir = "data/neg"
@@ -61,7 +65,29 @@ def create_dataset():
     # print(main_dataset.head())
     # print(main_dataset["label"].value_counts())
     # print(main_dataset.shape)
+    return main_dataset
+
+
+def train_test_valid_dataset(dataset):
+    train_val, test = train_test_split(
+        dataset,
+        test_size=0.2,
+        stratify=dataset["label"],
+        random_state=42,
+    )
+
+    train, val = train_test_split(
+        train_val,
+        test_size=0.125,
+        stratify=train_val["label"],
+        random_state=42,
+    )
+
+    return train, test, val
 
 
 if __name__ == "__main__":
-    create_dataset()
+    main_dataset = create_dataset()
+    tarin_datset, test_dataset, validation_dataset = train_test_valid_dataset(
+        main_dataset
+    )
