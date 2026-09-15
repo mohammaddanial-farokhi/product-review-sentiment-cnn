@@ -115,17 +115,37 @@ def train_test_valid_dataset(dataset):
     return train, test, val
 
 
+def prepare_data(train_df, val_df, test_df):
+    X_train = train_df["text"]
+    y_train = train_df["label"]
+
+    X_val = val_df["text"]
+    y_val = val_df["label"]
+
+    X_test = test_df["text"]
+    y_test = test_df["label"]
+
+    return X_train, y_train, X_val, y_val, X_test, y_test
+
+
+def build_tokenizer(X_train, vocab_size=12000):
+    tokenizer = Tokenizer(num_words=vocab_size, oov_token="<OOV>")
+    tokenizer.fit_on_texts(X_train)
+    return tokenizer
+
+
+def texts_to_padded(texts, tokenizer, maxlen=2678):
+    sequences = tokenizer.texts_to_sequences(texts)
+    padded = pad_sequences(sequences, padding="post", truncating="post", maxlen=maxlen)
+    return padded
+
+
 if __name__ == "__main__":
     main_dataset = build_dataset()
-    train_dataset, test_dataset, validation_dataset = train_test_valid_dataset(
-        main_dataset
+    train_dataset, test_dataset, val_dataset = train_test_valid_dataset(main_dataset)
+
+    X_train, y_train, X_val, y_val, X_test, y_test = prepare_data(
+        train_dataset, val_dataset, test_dataset
     )
 
-    X_train = train_dataset["text"]
-    y_train = train_dataset["label"]
-
-    X_val = validation_dataset["text"]
-    y_val = validation_dataset["label"]
-
-    X_test = test_dataset["text"]
-    y_test = test_dataset["label"]
+    tokenizer = build_tokenizer(X_train)
